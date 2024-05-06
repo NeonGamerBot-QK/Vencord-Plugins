@@ -6,7 +6,7 @@
 
 import * as DataStore from "@api/DataStore";
 import { definePluginSettings } from "@api/Settings";
-const { Devs } = {
+const  Devs  = {
   Neon: { 
   name: "Neon",
   id:566766267046821888n 
