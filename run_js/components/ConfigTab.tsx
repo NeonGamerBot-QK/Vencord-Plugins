@@ -6,66 +6,20 @@
 
 import "./styles.css";
 
-import { generateId } from "@api/Commands";
 import { DataStore } from "@api/index";
 import { classNameFactory } from "@api/Styles";
 import { SettingsTab, wrapTab } from "@components/VencordSettings/shared";
-import { proxyLazy } from "@utils/lazy";
 import { Margins } from "@utils/margins";
-import { findByPropsLazy, findLazy } from "@webpack";
-import { Button, Card, FluxDispatcher, Forms, React, Select, TabBar, TextArea, TextInput, useEffect, UserStore, UserUtils, useState } from "@webpack/common";
-import { User } from "discord-types/general";
-import { Constructor } from "type-fest";
+import { findByPropsLazy } from "@webpack";
+import { Button, Card, Forms, React, Select, TabBar, TextArea, TextInput, useEffect,  useState } from "@webpack/common";
 
-// import { SearchStatus, TabItem, Theme } from "../types";
-// import { ThemeInfoModal } from "./ThemeInfoModal";
 
 const cl = classNameFactory("vc-plugins-");
 const InputStyles = findByPropsLazy("inputDefault", "inputWrapper");
-const UserRecord: Constructor<Partial<User>> = proxyLazy(() => UserStore.getCurrentUser().constructor) as any;
-const TextAreaProps = findLazy(m => typeof m.textarea === "string");
 
-const API_URL = "https://themes-delta.vercel.app/api";
-
-async function themeRequest(path: string, options: RequestInit = {}) {
-    return fetch(API_URL + path, {
-        ...options,
-        headers: {
-            ...options.headers,
-        }
-    });
-}
-
-function makeDummyUser(user: { username: string; id?: string; avatar?: string; }) {
-    const newUser = new UserRecord({
-        username: user.username,
-        id: user.id ?? generateId(),
-        avatar: user.avatar,
-        bot: true,
-    });
-    FluxDispatcher.dispatch({
-        type: "USER_UPDATE",
-        user: newUser,
-    });
-    return newUser;
-}
-
-const themeTemplate = `/**
-* @name [Theme name]
-* @author [Your name]
-* @description [Your Theme Description]
-* @version [Your Theme Version]
-* @donate [Optionally, your Donation Link]
-* @tags [Optionally, tags that apply to your theme]
-* @invite [Optionally, your Support Server Invite]
-* @source [Optionally, your source code link]
-*/
-
-/* Your CSS goes here */
-`;
 const suffix = "runjs-";
 
-function ThemeTab() {
+function ConfigScriptsTab() {
     const [loading, setLoading] = useState(true);
     const [scripts, setScripts] = useState([]);
     useEffect(() => {
@@ -74,7 +28,7 @@ function ThemeTab() {
             setLoading(false);
         });
     }, []);
-    const getUser = (id: string, username: string) => UserUtils.getUser(id) ?? makeDummyUser({ username, id });
+   
 
     return (
         <div>
@@ -108,7 +62,6 @@ function ThemeTab() {
                         // @ts-ignore
                         setScripts([...scripts, { type: "choose", disabled: true }]);
                         // DataStore.set(suffix + "scripts", scripts);
-                        // Vencord.Settings.themeLinks = onlineThemeLinks;
                     }}
                         size={Button.Sizes.MEDIUM}
                         color={Button.Colors.PRIMARY}
@@ -148,15 +101,6 @@ function ScriptCard({ index, script, setScripts, scripts }) {
             className="vce-theme-text">
             {index}
         </Forms.FormTitle>
-        {/* <Forms.FormText className="vce-theme-text">
-            {theme.description}
-        </Forms.FormText> */}
-        {/* <img
-            role="presentation"
-            src={theme.thumbnail_url}
-            alt="Theme Preview Image"
-            className="vce-theme-info-preview"
-        /> */}
         <div className="vce-theme-info">
             <div style={{
                 justifyContent: "flex-start",
@@ -283,106 +227,8 @@ function ScriptCard({ index, script, setScripts, scripts }) {
         </div>
     </Card>;
 }
-// function SubmitThemes() {
-//     const currentUser = UserStore.getCurrentUser();
-//     const [themeContent, setContent] = useState("");
 
-//     const handleChange = (v: string) => setContent(v);
-
-//     return (
-//         <div className={`${Margins.bottom8} ${Margins.top16}`}>
-//             <Forms.FormTitle tag="h2" style={{
-//                 overflowWrap: "break-word",
-//                 marginTop: 8,
-//             }}>
-//                 Theme Guidelines
-//             </Forms.FormTitle>
-//             <Forms.FormText>
-//                 Follow the formatting for your CSS to get credit for your theme. You can find the template below.
-//             </Forms.FormText>
-//             <Forms.FormText>
-//                 (your theme will be reviewed and can take up to 24 hours to be approved)
-//             </Forms.FormText>
-//             <Forms.FormText className={`${Margins.bottom16} ${Margins.top8}`}>
-//                 <CodeBlock lang="css" content={themeTemplate} />
-//             </Forms.FormText>
-//             <Forms.FormTitle tag="h2" style={{
-//                 overflowWrap: "break-word",
-//                 marginTop: 8,
-//             }}>
-//                 Submit Themes
-//             </Forms.FormTitle>
-//             <Forms.FormText>
-//                 <TextArea
-//                     content={themeTemplate}
-//                     onChange={handleChange}
-//                     className={classes(TextAreaProps.textarea, "vce-text-input")}
-//                     placeholder="Theme CSS goes here..."
-//                     spellCheck={false}
-//                     rows={35}
-//                 />
-//                 <div style={{ display: "flex", alignItems: "center" }}>
-//                     <Button
-//                         onClick={() => {
-//                             if (themeContent.length < 50) return showToast("Theme content is too short, must be above 50", Toasts.Type.FAILURE);
-
-//                             themeRequest("/submit/theme", {
-//                                 method: "POST",
-//                                 headers: {
-//                                     "Content-Type": "application/json",
-//                                 },
-//                                 body: JSON.stringify({
-//                                     userId: `${currentUser.id}`,
-//                                     content: btoa(themeContent),
-//                                 }),
-//                             }).then(response => {
-//                                 if (!response.ok) {
-//                                     Toasts.show({
-//                                         message: "Failed to submit theme, try again later. Probably ratelimit, wait 2 minutes.",
-//                                         id: Toasts.genId(),
-//                                         type: Toasts.Type.FAILURE,
-//                                         options: {
-//                                             duration: 5e3,
-//                                             position: Toasts.Position.BOTTOM
-//                                         }
-//                                     });
-//                                 } else {
-//                                     Toasts.show({
-//                                         message: "Submitted your theme! Review can take up to 24 hours.",
-//                                         type: Toasts.Type.SUCCESS,
-//                                         id: Toasts.genId(),
-//                                         options: {
-//                                             duration: 5e3,
-//                                             position: Toasts.Position.BOTTOM
-//                                         }
-//                                     });
-//                                 }
-//                             }).catch(() => {
-//                                 showToast("Failed to submit theme, try later", Toasts.Type.FAILURE);
-//                             });
-//                         }}
-//                         size={Button.Sizes.MEDIUM}
-//                         color={Button.Colors.GREEN}
-//                         look={Button.Looks.FILLED}
-//                         className={Margins.top16}
-//                     >
-//                         Submit
-//                     </Button>
-//                     <p style={{
-//                         color: "var(--text-muted)",
-//                         fontSize: "12px",
-//                         marginTop: "8px",
-//                         marginLeft: "8px",
-//                     }}>
-//                         By submitting your theme, you agree to your Discord User ID being processed.
-//                     </p>
-//                 </div>
-//             </Forms.FormText>
-//         </div>
-//     );
-// }
-
-function ThemeLibrary() {
+function ConfigScripts() {
     const [currentTab, setCurrentTab] = useState(0);
 
     return (
@@ -402,9 +248,9 @@ function ThemeLibrary() {
                 </TabBar.Item>
             </TabBar>
 
-            {<ThemeTab />}
+            {<ConfigScriptsTab />}
         </SettingsTab>
     );
 }
 
-export default wrapTab(ThemeLibrary, "JS Scripts");
+export default wrapTab(ConfigScripts, "JS Scripts");
